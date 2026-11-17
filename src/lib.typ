@@ -6,63 +6,22 @@
 #import "./utils.typ"
 
 #let dstu-table = style.dstu-table
+#let formula-where = style.formula-where
 #let hfill = utils.hfill
 
-/// Coursework template for NURE
-/// - university (str): University code, default "ХНУРЕ"
-/// - subject (str): Subject short name
-/// - title (str): Work title
-/// - authors (array): List of author dictionaries
-/// - mentors (array): List of mentor dictionaries
-/// - task-list (dict): Task metadata
-/// - calendar-plan (dict): Calendar plan table and approval date
-/// - abstract (dict): Keywords and abstract text
-/// - bib-path (str): Path to bibliography file
-/// - appendices (content): Appendix content
-#let coursework(
-  doc,
-  university: "ХНУРЕ",
-  subject: none,
-  title: none,
-  authors: (),
-  mentors: (),
-  task-list: (),
-  calendar-plan: (),
-  abstract: (),
-  bib-path: none,
-  appendices: (),
-) = {
-  let doc-title = if type(title) == array { title.join(" ") } else { title }
-  set document(title: doc-title, author: authors.map(c => c.name))
-
-  show: style.dstu.with(skip: 1)
-
-  tp.cw.nure(
-    university,
-    subject,
-    title,
-    authors,
-    mentors,
-    task-list,
-    calendar-plan,
-    abstract,
-  )
-
-  doc
-
-  // Bibliography with DSTU formatting
-  {
-    show regex("^\\d+\\."): it => [#it#h(0.5cm)]
-    show block: it => [#it.body#parbreak()]
-    bibliography(bib-path, title: [Перелік джерел посилання], style: "csl/dstu-3008-2015.csl", full: true)
+#let _resolve-bib-style(bib-style) = {
+  if bib-style == "dstu-8302-2015" {
+    "csl/dstu-8302-2015.csl"
+  } else if bib-style == "dstu-3008-2015" {
+    "csl/dstu-3008-2015.csl"
+  } else {
+    bib-style
   }
-
-  style.appendices(appendices)
 }
 
-/// Alternative coursework template for NURE.
+/// Unified Coursework / Explanatory Note template for NURE (DSTU 3008:2015 base)
 /// - university (str): University code, default "ХНУРЕ"
-/// - title (str): Work title
+/// - title (str | array): Work title
 /// - authors (array): List of author dictionaries
 /// - mentors (array): List of mentor dictionaries
 /// - committee-members (array): Optional list of commission member dictionaries for the title page
@@ -70,11 +29,15 @@
 /// - calendar-plan (dict): Calendar plan table
 /// - abstract (dict): Keywords and abstract text
 /// - abstract-en (dict): Optional English keywords and abstract text
-/// - bib-path (str): Path to bibliography file
+/// - bib-path (str | bytes): Path or bytes for bibliography file
+/// - bib-style (str): Bibliography CSL style: "dstu-8302-2015" (default), "dstu-3008-2015", or custom CSL path
 /// - appendices (content): Appendix content
-#let coursework-v2(
+/// - work-type (str): Work type title on cover page, default "КОМПЛЕКСНИЙ КУРСОВИЙ ПРОЄКТ"
+/// - subject (str): Optional subject short name (kept for compatibility)
+#let coursework(
   doc,
   university: "ХНУРЕ",
+  subject: none,
   title: none,
   authors: (),
   mentors: (),
@@ -84,11 +47,13 @@
   abstract: (),
   abstract-en: none,
   bib-path: none,
+  bib-style: "dstu-8302-2015",
   appendices: (),
   faculty: "комп’ютерних наук",
   education-level: "перший (бакалаврський)",
   program-type: "освітньо-професійна",
   program-name: none,
+  work-type: "КОМПЛЕКСНИЙ КУРСОВИЙ ПРОЄКТ",
 ) = {
   assert(authors.len() > 0, message: "At least one author required")
   assert(mentors.len() > 0, message: "At least one mentor required")
@@ -109,14 +74,13 @@
   } else {
     abstract
   }
-  let committee_members = committee-members
 
   tp.cw-v2.nure(
     university,
     title,
     authors,
     mentors,
-    committee_members,
+    committee-members,
     task-list,
     calendar-plan,
     abstract,
@@ -125,20 +89,22 @@
     education-level: education-level,
     program-type: program-type,
     program-name: program-name,
+    work-type: work-type,
   )
 
   doc
 
-
-
-  {
+  if bib-path != none {
     show regex("^\\d+\\."): it => [#it#h(0.5cm)]
     show block: it => [#it.body#parbreak()]
-    bibliography(bib-path, title: [Перелік джерел посилання], style: "csl/dstu-8302-2015.csl", full: true)
+    bibliography(bib-path, title: [Перелік джерел посилання], style: _resolve-bib-style(bib-style), full: true)
   }
 
   style.appendices(appendices)
 }
+
+/// Alias for backwards compatibility with earlier coursework-v2 imports
+#let coursework-v2 = coursework
 
 /// Practice and Laboratory works template
 /// - layout (str): "default", "minimal", or "complex"

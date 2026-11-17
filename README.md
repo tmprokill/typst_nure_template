@@ -12,21 +12,19 @@ This template:
 - Sets up document styles;
 - Formats the title page according to NURE/DSTU guidelines.
 
-#### `coursework` - For Course Works
-This template:
-- Sets up document styles;
+#### `coursework` - For Course Works & Explanatory Notes (ДСТУ 3008:2015)
+This unified template:
+- Sets up document styles according to ДСТУ 3008:2015 & NURE 2025.2 requirements;
 - Formats the title, task, calendar plan, and abstract pages;
-- Typesets the bibliography according to ДСТУ 3008:2015 using custom CSL style;
+- Typesets the bibliography according to ДСТУ 8302:2015 (default) or ДСТУ 3008:2015 via `bib-style`;
 - Typesets the outline and appendices according to standard requirements.
-
-#### `coursework-v2` - New Coursework Variant
-This template keeps the legacy coursework template intact while offering the newer title/task-page layout. See `template/default/coursework-v2.typ` for an example entrypoint.
 
 ### Utilities
 - `nheading` - For unnumbered headings, such as "Introduction" and "Conclusion".
 - `hfill` - Fills horizontal space with a filled box instead of just empty space; useful for creating underlines.
 - `uline` - Creates underlined fields that need to be filled, such as the name field on the task list.
 - `bold` - Inserts bold text inside functional environments.
+- `formula-where` - Formats formula parameter annotations (`де <sym> -- <desc>; ... .`).
 - `img` - Inserts images with a caption, automatically deriving the label from the image file name (use via `#import "@local/nure:0.1.1": utils` and call `utils.img`).
 
 **Note:** `img()` is provided in `template/utils.typ` so you can copy it into your project root for compatibility, until [path() type](https://github.com/typst/typst/pull/7555) is released.

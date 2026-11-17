@@ -15,11 +15,36 @@
 /// Helper for level 2/3 heading blocks
 #let heading-block(it, num: auto) = {
   v(double-spacing, weak: true)
-  block(width: 100%, spacing: 0em)[
+  block(width: 100%, spacing: 0em, sticky: true)[
     #h(indent-size)
     #counter(heading).display(num)
     #it.body
   ]
+  v(double-spacing, weak: true)
+}
+
+/// Formula parameter annotation block ("де <sym> -- <desc>; ... .")
+#let formula-where(..items) = {
+  let entries = items.pos()
+  if entries.len() == 0 { return }
+  set par(first-line-indent: 0pt)
+  v(spacing, weak: true)
+  grid(
+    columns: (auto, auto, 1fr),
+    column-gutter: (0.4em, 0.4em),
+    row-gutter: spacing * 0.65,
+    align: (left, left, left),
+    ..entries
+      .enumerate()
+      .map(((i, pair)) => {
+        let prefix = if i == 0 { [де] } else { [] }
+        let sym = pair.at(0)
+        let desc = pair.at(1)
+        let punct = if i == entries.len() - 1 { [.] } else { [;] }
+        (prefix, sym, [-- #desc#punct])
+      })
+      .flatten(),
+  )
   v(double-spacing, weak: true)
 }
 
@@ -40,8 +65,9 @@
   value
 }
 
-#let dstu-table-label(it) = {
-  set par(first-line-indent: 0pt)
+#let dstu-table-label(it, indent: true) = {
+  set text(size: 14pt)
+  set par(first-line-indent: if indent { (amount: indent-size, all: true) } else { 0pt })
   align(left)[#it]
 }
 
@@ -153,7 +179,7 @@
     paper: "a4",
     number-align: top + right,
     margin: (top: 20mm, right: 10mm, bottom: 20mm, left: 25mm),
-    numbering: (i, ..) => if i > skip { numbering("1", i + offset) },
+    numbering: (i, ..) => if i > skip { text(size: 12pt, numbering("1", i + offset)) },
   )
 
   // Text and paragraph
@@ -165,13 +191,31 @@
   set block(spacing: spacing)
   set underline(evade: false)
 
+  // Hard rule: allow wrapping long unbroken tokens (hex, Base64, long IDs) at page margins
+  show regex("[0-9A-Za-z_+/=-]{40,}"): m => m.text.clusters().join(sym.zws)
+
   // Lists
   set enum(indent: indent-size, body-indent: 0.5cm, numbering: i => ukr-enum.at(i - 1) + ")")
   show enum: it => {
     set enum(indent: 0em, numbering: "1)")
+    set list(indent: 0em)
     it
   }
   set list(indent: indent-size + 0.1cm, body-indent: 0.5cm, marker: [--])
+  show list: it => {
+    set list(indent: 0em)
+    it
+  }
+
+  // Tables: reset paragraph indent/justify/leading inside cells, use crisp 0.5pt borders,
+  // 12pt table text (per .dotm Table Grid), and allow breaking long unbroken tokens inside cells.
+  set table(stroke: 0.5pt + black, inset: (x: 6pt, y: 6pt))
+  show table: it => {
+    set text(size: 12pt)
+    set par(first-line-indent: 0pt, justify: false, leading: 0.5em, spacing: 0.5em)
+    show regex("[0-9A-Za-z_+/=-]{18,}"): m => m.text.clusters().join(sym.zws)
+    it
+  }
 
   // Figures
   show ref: it => {
@@ -252,7 +296,11 @@
     it
   }
   set figure(numbering: i => context numbering("1.1", counter(heading).get().at(0), i))
-  set math.equation(numbering: i => context numbering("(1.1)", counter(heading).get().at(0), i))
+  set math.equation(numbering: i => context text(
+    font: ("Times New Roman", "Liberation Serif"),
+    size: 14pt,
+    numbering("(1.1)", counter(heading).get().at(0), i),
+  ))
 
   // Headings
   set heading(numbering: "1.1")
@@ -260,7 +308,7 @@
     set text(size: 14pt)
     if it.level == 1 {
       set align(center)
-      set text(weight: "semibold")
+      set text(weight: "bold")
       pagebreak(weak: true)
       upper(it)
       v(double-spacing, weak: true)
@@ -275,9 +323,9 @@
     let code-spacing = 0.5em
     set block(spacing: code-spacing)
     set par(spacing: code-spacing, leading: code-spacing)
-    set text(size: 11pt, weight: "semibold", font: ("Courier New", "Liberation Mono"))
+    set text(size: 11pt, weight: "bold", font: ("Courier New", "Liberation Mono"))
     v(double-half-spacing, weak: true)
-    pad(it, left: indent-size)
+    block(width: 100%, pad(it, left: indent-size))
     v(double-half-spacing, weak: true)
   }
 
@@ -302,7 +350,11 @@
 
   let app-letter = context upper(ukr-enum.at(counter(heading).get().at(0) - 1))
   set figure(numbering: i => app-letter + "." + str(i))
-  set math.equation(numbering: i => [(#app-letter.#str(i))])
+  set math.equation(numbering: i => text(
+    font: ("Times New Roman", "Liberation Serif"),
+    size: 14pt,
+    [(#app-letter.#str(i))],
+  ))
 
   show heading: h => {
     set text(size: 14pt)
@@ -317,13 +369,13 @@
       set align(center)
       set text(weight: "regular")
       pagebreak(weak: true)
-      bold([ДОДАТОК #counter(heading).display(auto)])
+      [ДОДАТОК #counter(heading).display(auto)]
       linebreak()
-      h.body
+      upper(h.body)
       v(double-spacing, weak: true)
     } else {
       set text(weight: "regular")
-      heading-block(h)
+      heading-block(h, num: h.numbering)
     }
   }
 

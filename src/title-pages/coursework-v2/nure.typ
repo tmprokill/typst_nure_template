@@ -108,6 +108,7 @@
   education-level: "перший (бакалаврський)",
   program-type: "освітньо-професійна",
   program-name: none,
+  work-type: "КОМПЛЕКСНИЙ КУРСОВИЙ ПРОЄКТ",
 ) = {
   let author = authors.first()
   let head-mentor = mentors.first()
@@ -166,7 +167,7 @@
     #v(1.8em)
 
     #set align(center)
-    #text(size: 20pt, weight: "bold")[КОМПЛЕКСНИЙ КУРСОВИЙ ПРОЄКТ]\
+    #text(size: 20pt, weight: "bold")[#work-type]\
     #text(size: 20pt, weight: "bold")[Пояснювальна записка]
 
     #v(0.9em)
@@ -365,6 +366,7 @@
 
   {
     show outline.entry: it => {
+      set text(size: 14pt, weight: "regular")
       let el = it.element
 
       if el.func() == heading and el.supplement == [Додаток] {

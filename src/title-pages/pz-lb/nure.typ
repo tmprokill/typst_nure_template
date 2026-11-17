@@ -1,4 +1,9 @@
 #import "../../helpers.typ": *
+#let _group-name(a) = {
+  let g = str(a.group)
+  if g.starts-with(a.edu-program) { g } else { a.edu-program + "-" + g }
+}
+
 #let nure(uni, edu-program, subject, type, number, title, authors, mentors) = {
   align(center)[
     #upper([Міністерство освіти і науки України\ #uni.name])
@@ -20,13 +25,13 @@
       #if authors.len() == 1 {
         let a = authors.first()
         [#gender-form("author", dict: a):\ ]
-        if ("edu-program" in a) and ("group" in a) [ст. гр. #a.edu-program\-#a.group\ ]
+        if ("edu-program" in a) and ("group" in a) [ст. гр. #_group-name(a)\ ]
         [#a.name\ ]
         if ("variant" in a) and (not is-empty(a.variant)) [Варіант: №#a.variant]
       } else if authors.len() > 1 [
         #gender-form("author"):\
         #for a in authors [
-          #if ("edu-program" in a) and ("group" in a) [ ст. гр. #a.edu-program\-#a.group\ ]
+          #if ("edu-program" in a) and ("group" in a) [ ст. гр. #_group-name(a)\ ]
           #a.name\
         ]
       ]
